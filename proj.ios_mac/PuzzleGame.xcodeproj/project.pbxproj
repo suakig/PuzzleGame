@@ -87,6 +87,7 @@
 		5C41548219D4036A005687DA /* red.png in Resources */ = {isa = PBXBuildFile; fileRef = 5C41546119D4036A005687DA /* red.png */; };
 		5C41548319D4036A005687DA /* Win.png in Resources */ = {isa = PBXBuildFile; fileRef = 5C41546219D4036A005687DA /* Win.png */; };
 		5C41548419D4036A005687DA /* yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = 5C41546319D4036A005687DA /* yellow.png */; };
+		5C41548719D4073C005687DA /* BallSprite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5C41548619D4073C005687DA /* BallSprite.cpp */; };
 		BF171245129291EC00B8313A /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF170DB012928DE900B8313A /* OpenGLES.framework */; };
 		BF1712471292920000B8313A /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = BF170DB412928DE900B8313A /* libz.dylib */; };
 		BF1C47F01293687400B63C5D /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF1C47EA1293683800B63C5D /* QuartzCore.framework */; };
@@ -313,6 +314,8 @@
 		5C41546119D4036A005687DA /* red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = red.png; sourceTree = "<group>"; };
 		5C41546219D4036A005687DA /* Win.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Win.png; sourceTree = "<group>"; };
 		5C41546319D4036A005687DA /* yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = yellow.png; sourceTree = "<group>"; };
+		5C41548519D4072A005687DA /* BallSprite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BallSprite.h; path = ../Classes/BallSprite.h; sourceTree = "<group>"; };
+		5C41548619D4073C005687DA /* BallSprite.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BallSprite.cpp; sourceTree = "<group>"; };
 		BF170DB012928DE900B8313A /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
 		BF170DB412928DE900B8313A /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		BF1C47EA1293683800B63C5D /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
@@ -391,6 +394,8 @@
 			children = (
 				1AFAF8B316D35DE700DB1158 /* AppDelegate.cpp */,
 				1AFAF8B416D35DE700DB1158 /* AppDelegate.h */,
+				5C41548519D4072A005687DA /* BallSprite.h */,
+				5C41548619D4073C005687DA /* BallSprite.cpp */,
 			);
 			name = Classes;
 			path = ../classes;
@@ -777,6 +782,7 @@
 			files = (
 				503AE10017EB989F00D1A890 /* AppController.mm in Sources */,
 				503AE10217EB989F00D1A890 /* RootViewController.mm in Sources */,
+				5C41548719D4073C005687DA /* BallSprite.cpp in Sources */,
 				1AFAF8B716D35DE700DB1158 /* AppDelegate.cpp in Sources */,
 				503AE10117EB989F00D1A890 /* main.m in Sources */,
 			);
