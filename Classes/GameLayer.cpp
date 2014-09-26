@@ -7,6 +7,8 @@ USING_NS_CC;
 
 //コンストラクタ
 GameLayer::GameLayer()
+: _movingBall(nullptr)
+, _movedBall(false)
 {
     //乱数初期化および各ボールの出現の重みを指定
     std::random_device device;
@@ -29,6 +31,16 @@ bool GameLayer::init()
 {
     if (!Layer::init())
         return false;
+    
+    // シングルタップイベントの取得
+    auto touchListener = EventListenerTouchOneByOne::create();
+    touchListener->setSwallowTouches(_swallowsTouches);
+    touchListener->onTouchBegan = CC_CALLBACK_2(GameLayer::onTouchBegan, this);
+    touchListener->onTouchMoved = CC_CALLBACK_2(GameLayer::onTouchMoved, this);
+    touchListener->onTouchEnded = CC_CALLBACK_2(GameLayer::onTouchEnded, this);
+    touchListener->onTouchCancelled = CC_CALLBACK_2(GameLayer::onTouchCancelled, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
+    
     initBackground();
     initBalls();
     
@@ -102,20 +114,88 @@ BallSprite* GameLayer::newBalls(BallSprite::PositionIndex PositionIndex)
     
     return ball;
 }
-                     
 
+bool GameLayer::onTouchBegan(Touch *touch, Event *unused_event)
+{
+    _movedBall = false;
+    _movingBall = getTouchBall(touch->getLocation());
+    
+    if (_movingBall) {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
+void GameLayer::onTouchMoved(cocos2d::Touch *touch, cocos2d::Event *unused_event)
+{
+    //スワイプとともにボールを移動する
+    _movingBall->setPosition(_movingBall->getPosition() + touch->getDelta());
+    
+    auto touchBall = getTouchBall(touch->getLocation(), _movingBall->getPositionIndex());
+    if (touchBall && _movingBall != touchBall)
+    {
+        //移動しているボールが、別のボールの位置に移動
+        _movedBall = true;
+        
+        //別のボールの位置インデックスを収得
+        auto touchBallPositionIndex = touchBall->getPositionIndex();
+        
+        //別のボールを移動しているボールの元の位置へ移動する
+        touchBall->setPositionIndexAndChangePosition(_movingBall->getPositionIndex());
+        
+        //移動しているボールの情報を変更
+        _movingBall->setPositionIndex(touchBallPositionIndex);
+    }
+}
 
+void GameLayer::onTouchEnded(Touch *touch, Event *unused_event)
+{
+    movedBall();
+}
 
+void GameLayer::onTouchCancelled(Touch *touch, Event *unused_event)
+{
+    onTouchEnded(touch, unused_event);
+}
 
+//タップした位置をチェック
+BallSprite* GameLayer::getTouchBall(Point touchPos, BallSprite::PositionIndex withoutPosIndex)
+{
+    for (int x = 1; x <= BALL_NUM_X; x++) {
+        for (int y = 1; y <= BALL_NUM_Y; y++) {
+            if (x == withoutPosIndex.x && y == withoutPosIndex.y)
+            {
+                //指定位置のボールの場合は、以下の処理を行わない
+                continue;
+            }
+            
+            //タップ位置にあるボールかどうかを判断する
+            int tag = BallSprite::generateTag(BallSprite::PositionIndex(x, y));
+            auto ball = (BallSprite*)(getChildByTag(tag));
+            if (ball) {
+                //2点間の距離を求める
+                float distance = ball->getPosition().getDistance(touchPos);
+                
+                //ボールの当たり判定は円形。つまりボールの中心からの半径で判断する。
+                if(distance <= BALL_SIZE / 2)
+                {
+                    //タップした位置にボールが存在する
+                    return ball;
+                }
+            }
+        }
+    }
+    
+    return nullptr;
+}
 
-
-
-
-
-
-
-
-
-
-
+//タップ操作によるボールの移動完了時処理
+void GameLayer::movedBall()
+{
+    //移動しているボールを本来の位置に戻す
+    _movingBall->resetPosition();
+    _movingBall = nullptr;
+}
