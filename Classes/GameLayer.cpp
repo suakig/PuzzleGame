@@ -9,6 +9,9 @@ USING_NS_CC;
 GameLayer::GameLayer()
 : _movingBall(nullptr)
 , _movedBall(false)
+, _touchable(true)
+, _maxRemoveNo(0)
+, _chainNumber(0)
 {
     //乱数初期化および各ボールの出現の重みを指定
     std::random_device device;
@@ -63,13 +66,13 @@ void GameLayer::initBalls()
 {
     for (int x = 1; x <= BALL_NUM_X; x++) {
         for (int y = 1; y <= BALL_NUM_Y; y++) {
-            newBalls(BallSprite::PositionIndex(x, y));
+            newBalls(BallSprite::PositionIndex(x, y), true);
         }
     }
 }
 
 //新規ボールの作成
-BallSprite* GameLayer::newBalls(BallSprite::PositionIndex PositionIndex)
+BallSprite* GameLayer::newBalls(BallSprite::PositionIndex PositionIndex, bool visible)
 {
     //現在のタグを収得
     int currentTag = BallSprite::generateTag(PositionIndex);
@@ -108,7 +111,7 @@ BallSprite* GameLayer::newBalls(BallSprite::PositionIndex PositionIndex)
     }
     
     //ボールの表示
-    auto ball = BallSprite::create((BallSprite::BallType)ballType, true);
+    auto ball = BallSprite::create((BallSprite::BallType)ballType, visible);
     ball->setPositionIndexAndChangePosition(PositionIndex);
     addChild(ball, ZOrder::Ball);
     
@@ -117,6 +120,9 @@ BallSprite* GameLayer::newBalls(BallSprite::PositionIndex PositionIndex)
 
 bool GameLayer::onTouchBegan(Touch *touch, Event *unused_event)
 {
+    if (!_touchable)
+        return false;
+    
     _movedBall = false;
     _movingBall = getTouchBall(touch->getLocation());
     
@@ -198,4 +204,188 @@ void GameLayer::movedBall()
     //移動しているボールを本来の位置に戻す
     _movingBall->resetPosition();
     _movingBall = nullptr;
+    
+    //一列に並んだボールがあるかチェックする
+    _chainNumber = 0;
+    _removeNumbers.clear();
+    checksLinedBalls();
 }
+
+//一列に並んだボールがあるかチェックする
+void GameLayer::checksLinedBalls()
+{
+    //画面をタップ不可とする
+    _touchable = false;
+
+    if (existsLinedBalls()) {
+        //3個以上並んだボールの存在する場所
+        
+        //連鎖カウントアップ
+        _chainNumber++;
+        
+        //ボールの削除と生成
+        removeAndGenerateBalls();
+        
+        //アニメーション後に再チェック　これなにやってんの？
+        auto delay = DelayTime::create(ONE_ACTION_TIME * (_maxRemoveNo + 1));
+        auto func = CallFunc::create(CC_CALLBACK_0(GameLayer::checksLinedBalls, this));
+        auto seq = Sequence::create(delay, func, nullptr);
+        runAction(seq);
+    }
+    else
+    {
+        //タップを有効にする
+        _touchable = true;
+    }
+}
+
+//3個以上並んだボールの存在チェック
+bool GameLayer::existsLinedBalls()
+{
+    //ボールのパラメータを初期化する
+    initBallParams();
+    
+    //消去される順番を初期化
+    _maxRemoveNo = 0;
+    
+    for (int x = 1; x <= BALL_NUM_X; x++)
+    {
+        for (int y = 1; y <= BALL_NUM_Y; y++)
+        {
+            
+            //x方向のボールをチェック
+            checkedBall(BallSprite::PositionIndex(x, y), Direction::x);
+            
+            //x方向のボールをチェック
+            checkedBall(BallSprite::PositionIndex(x, y), Direction::y);
+        }
+    }
+    
+    //戻り値の決定
+    return _maxRemoveNo > 0;
+}
+
+Map<int, BallSprite*> GameLayer::getAllBalls()
+{
+    auto balls = Map<int, BallSprite*>();
+    
+    //GameLayerの持つ全ノードから,BallSpriteクラスのノードを抽出する
+    for (auto object : getChildren()) {
+        auto ball = dynamic_cast<BallSprite*>(object);
+        if (ball)
+            balls.insert(ball->getTag(), ball);
+    }
+    
+    return balls;
+}
+
+//指定方向のボールと同じ色かチェックする
+bool GameLayer::isSameBallType(BallSprite::PositionIndex current, Direction direction)
+{
+    auto allBalls = getAllBalls();
+    
+    if (direction == Direction::x) {
+        if (current.x + 1 > BALL_NUM_X)
+            //列が存在しない場合は抜ける
+            return false;
+    }
+    else
+    {
+        if (current.y + 1 > BALL_NUM_Y) {
+            //行が存在しない場合は抜ける
+        }
+    }
+    
+    //現在のボールを収得
+    int currentTag = BallSprite::generateTag(BallSprite::PositionIndex(current.x, current.y));
+    BallSprite* currentBall = allBalls.at(currentTag);
+    
+    //次のボールを収得
+    int nextTag;
+    if (direction == Direction::x)
+        nextTag = BallSprite::generateTag(BallSprite::PositionIndex(current.x + 1, current.y));
+    else
+        nextTag = BallSprite::generateTag(BallSprite::PositionIndex(current.x, current.y + 1));
+    
+    auto nextBall = allBalls.at(nextTag);
+    
+    if (currentBall->getBallType() == nextBall->getBallType())
+        //次のボールが同じBallTypeである
+        return true;
+    
+    return false;
+}
+
+//ボールのパラメータを初期化する
+void GameLayer::initBallParams()
+{
+    //全てのBallTypeを収得
+    auto allBalls = getAllBalls();
+
+    for (auto ball: allBalls) {
+        ball.second->resetParams();
+    }
+}
+
+//全ボールに対してボールの並びをチェックする
+void GameLayer::checkedBall(BallSprite::PositionIndex current, Direction direction)
+{
+    //全てのBallTypeを収得
+    auto allBalls = getAllBalls();
+    
+    //検索するタグを生成
+    int tag = BallSprite::generateTag(BallSprite::PositionIndex(current.x, current.y));
+    BallSprite* ball = allBalls.at(tag);
+    
+    //指定方向のチェック済みフラグを収得
+    bool checked;
+    if (direction == Direction::x)
+        checked = ball->getCheckedX();
+    else
+        checked = ball->getCheckedY();
+    
+    if (!checked) {
+        int num = 0;
+        
+        while (true) {
+            //検索情報を収得
+            BallSprite::PositionIndex searchPosition;
+            if (direction == Direction::x)
+                searchPosition = BallSprite::PositionIndex(current.x + num, current.y);
+            else
+                searchPosition = BallSprite::PositionIndex(current.x, current.y + num);
+            
+            //次のボールと同じballTypeかチェックする
+            if (isSameBallType(searchPosition, direction))
+            {
+                //次のボールと同じballType
+                int nextTag = BallSprite::generateTag(searchPosition);
+                auto nextBall = allBalls.at(nextTag);
+                
+                //チェックしたボールのチェック済みフラグを立てる
+                if (direction == Direction::x)
+                    nextBall->setCheckedX(true);
+                else
+                    nextBall->setCheckedY(true);
+
+                num++;
+            }
+            else
+            {
+                
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
