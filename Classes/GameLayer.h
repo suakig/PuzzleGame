@@ -33,7 +33,7 @@ protected:
     std::discrete_distribution<int> _distForBall; //乱数の分布
     
     void initBackground(); //背景の初期化
-    void initBalls(); //ボールの初期化
+    void initBalls(); //ボールの初期表示
     BallSprite* newBalls(BallSprite::PositionIndex positionIndex); //新規ボール作成
     
 public:

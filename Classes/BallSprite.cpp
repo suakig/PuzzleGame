@@ -12,7 +12,7 @@ BallSprite::BallSprite()
 {
 }
 
-//インスタンス生成 create関数はCREATE_FUNCとマクロとほぼ同じ内容で実装する
+//インスタンス生成
 BallSprite* BallSprite::create(BallType type, bool visible)
 {
     BallSprite *pRet = new BallSprite();
@@ -37,7 +37,6 @@ bool BallSprite::init(BallType type, bool visible)
     
     _ballType = type;
     
-    //ボールの初期化の表示可否を設定する。
     setVisible(visible);
     
     return true;
@@ -76,7 +75,7 @@ void BallSprite::setPositionIndex(PositionIndex positionIndex)
     setTag(generateTag(_positionIndex));
 }
 
-//インデックスとタグ位置を変更する
+//インデックスとタグと位置を変更する
 void BallSprite::setPositionIndexAndChangePosition(PositionIndex positionIndex)
 {
     //インデックスとタグを変更する
@@ -86,6 +85,7 @@ void BallSprite::setPositionIndexAndChangePosition(PositionIndex positionIndex)
     resetPosition();
 }
 
+//消去アニメーションと落下アニメーション
 void BallSprite::removingAndFallingAnimation(int maxRemovedNo)
 {
     //ボールを消すアニメーション
@@ -111,13 +111,14 @@ void BallSprite::removingAnimation(int maxRemovedNo)
     }
 }
 
-//ボールの落下アニメーション
+//ボール落下アニメーション
 void BallSprite::fallingAnimation(int maxRemovedNo)
 {
     if (_fallCount > 0)
     {
         //ボールを落とすアニメーション
         setPositionIndex(PositionIndex(_positionIndex.x, _positionIndex.y - _fallCount));
+        
         auto delay = DelayTime::create(ONE_ACTION_TIME * maxRemovedNo);
         auto show = Show::create();
         auto move = MoveTo::create(ONE_ACTION_TIME, getPositionForPositionIndex(getPositionIndex()));
@@ -140,7 +141,7 @@ std::string BallSprite::getBallImageFilePath(BallType type)
     }
 }
 
-//位置インデックスからPonitを取得
+//位置インデックスからPointを取得
 Point BallSprite::getPositionForPositionIndex(PositionIndex positionIndex)
 {
     return Point(BALL_SIZE * (positionIndex.x - 0.5) + 1,

@@ -3,34 +3,33 @@
 
 USING_NS_CC;
 
-AppDelegate::AppDelegate() {
-
+AppDelegate::AppDelegate()
+{
 }
 
 AppDelegate::~AppDelegate() 
 {
 }
 
-bool AppDelegate::applicationDidFinishLaunching() {
-    // initialize director
+bool AppDelegate::applicationDidFinishLaunching()
+{
     auto director = Director::getInstance();
     auto glview = director->getOpenGLView();
-    if(!glview) {
+    if(!glview)
+    {
         glview = GLView::create("My Game");
         director->setOpenGLView(glview);
     }
 
-    // turn on display FPS
     director->setDisplayStats(true);
-
-    // set FPS. the default value is 1.0/60 if you don't call this
     director->setAnimationInterval(1.0 / 60);
-    
-    glview->setDesignResolutionSize(640, 1136, ResolutionPolicy::FIXED_HEIGHT);
+
+    // 画像が画面の幅にフィットするように画像を伸縮させる
+    glview->setDesignResolutionSize(640, 1136, ResolutionPolicy::FIXED_WIDTH);
     
     auto scene = GameLayer::createScene();
     director->runWithScene(scene);
-
+    
     return true;
 }
 
